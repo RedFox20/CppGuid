@@ -39,5 +39,13 @@ int main(int argc, char** argv)
     Assert(Guid::create_str().size() == 36, "New GUID string length must be 36");
     Assert(Guid{ guid.bytes } == guid, "GUID initialized from bytes must equal original GUID");
 
+    Guid copy = guid;
+    Assert(copy.valid(), "Copy constructed GUID must not be empty");
+    Assert(copy == guid, "Copy constructed GUID must be equal to original");
+
+    copy = {};
+    copy = guid;
+    Assert(copy.valid(), "Copy assigned GUID must not be empty");
+    Assert(copy == guid, "Copy assigned GUID must be equal to original");
     return 0;
 }
