@@ -31,3 +31,7 @@ void test()
     std::cout << guid << "\n";
 }
 ```
+
+# For contributors
+Building and testing with mama:
+`$ CppGuid> mama build test`
