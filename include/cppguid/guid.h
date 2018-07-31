@@ -70,7 +70,8 @@ namespace cppguid
     // and always serialize as a string
     template<class Stream> Stream& operator<<(Stream& s, const Guid& guid)
     {
-        return s << guid.str();
+        s << guid.str();
+        return s;
     }
 
 }
