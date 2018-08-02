@@ -32,3 +32,4 @@
 *.app
 build/
 mama.cmake
+.vscode/

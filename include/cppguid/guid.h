@@ -7,6 +7,7 @@
 #include <array>
 #include <string>
 #include <vector>
+#include <ostream>
 
 #ifndef CPPGUID_API
 #  if _MSC_VER
@@ -66,14 +67,11 @@ namespace cppguid
         void zeroify(); // set all bytes to zero
     };
 
-    // support any type of stream
-    // and always serialize as a string
-    template<class Stream> Stream& operator<<(Stream& s, const Guid& guid)
+    // serialize as a string to std::ostream
+    inline std::ostream& operator<<(std::ostream& s, const Guid& guid)
     {
-        s << guid.str();
-        return s;
+        return s << guid.str();
     }
-
 }
 
 namespace std
