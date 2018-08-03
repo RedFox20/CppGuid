@@ -39,8 +39,14 @@ endif()
 
 option(CPPGUID_BUILD_TESTS "Build CppGuid test suite" OFF)
 
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-find_package(UUID REQUIRED)
+if(LINUX)
+    find_package(UUID REQUIRED)
+    set(LIBS ${UUID_LIBRARY})
+    message("Linux LIBS: ${LIBS}")
+endif()
+
 
 include_directories("include")
 file(GLOB_RECURSE CPPGUID_PUBLIC_INTERFACE include/*.h)
@@ -49,7 +55,7 @@ source_group(include FILES ${CPPGUID_PUBLIC_INTERFACE})
 source_group(src FILES ${CPPGUID_PRIVATE_SOURCES})
 add_library(CppGuid STATIC ${CPPGUID_PUBLIC_INTERFACE} ${CPPGUID_PRIVATE_SOURCES})
 
-target_link_libraries(CppGuid PUBLIC ${UUID_LIBRARY})
+target_link_libraries(CppGuid PUBLIC ${LIBS})
 install(TARGETS CppGuid DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 
 

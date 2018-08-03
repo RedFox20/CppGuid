@@ -1,6 +1,6 @@
 import mama
 class CppGuid(mama.BuildTarget):
-    local_workspace = 'build'
+    workspace = 'build'
 
     def dependencies(self):
         pass
@@ -10,5 +10,11 @@ class CppGuid(mama.BuildTarget):
             print("Enabled CppGuidTests for testing")
             self.add_cmake_options('CPPGUID_BUILD_TESTS=ON')
 
+    def package(self):
+        self.export_include('include')
+        self.export_libs('lib', src_dir=True)
+        if self.linux:
+            self.export_syslib('uuid')
+
     def test(self, args):
-        self.gdb('lib/CppGuidTests', src_dir=True)
+        self.gdb(f'lib/CppGuidTests {args}', src_dir=True)
