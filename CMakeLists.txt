@@ -39,6 +39,8 @@ endif()
 
 option(CPPGUID_BUILD_TESTS "Build CppGuid test suite" OFF)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+find_package(UUID REQUIRED)
 
 include_directories("include")
 file(GLOB_RECURSE CPPGUID_PUBLIC_INTERFACE include/*.h)
@@ -46,13 +48,17 @@ file(GLOB_RECURSE CPPGUID_PRIVATE_SOURCES src/*.c src/*.cpp src/*.h)
 source_group(include FILES ${CPPGUID_PUBLIC_INTERFACE})
 source_group(src FILES ${CPPGUID_PRIVATE_SOURCES})
 add_library(CppGuid STATIC ${CPPGUID_PUBLIC_INTERFACE} ${CPPGUID_PRIVATE_SOURCES})
+
+target_link_libraries(CppGuid PUBLIC ${UUID_LIBRARY})
 install(TARGETS CppGuid DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+
 
 if (CPPGUID_BUILD_TESTS AND (LINUX OR WIN32 OR MACOS))
     message(STATUS "Enabled CppGuidTests")
     file(GLOB_RECURSE CPPGUID_TESTS tests/*.c tests/*.cpp tests/*.h)
     source_group(tests FILES ${CPPGUID_TESTS})
     add_executable(CppGuidTests ${CPPGUID_TESTS})
+
     target_link_libraries(CppGuidTests PRIVATE CppGuid)
     install(TARGETS CppGuidTests DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 endif()

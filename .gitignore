@@ -33,3 +33,5 @@
 build/
 mama.cmake
 .vscode/
+
+lib/
