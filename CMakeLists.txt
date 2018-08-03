@@ -6,9 +6,12 @@ include_directories(${MAMA_INCLUDES})
 
 
 if(CLANG OR GCC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wno-shorten-64-to-32 -g")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall")
+    if (CLANG)
+        set(CMAKE_CXX_FLAGS "{CMAKE_CXX_FLAGS} -Wno-shorten-64-to-32")
+    endif()
     if (LINUX)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -stdlib=libc++")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
     elseif (APPLE) # enable Objective-C++
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-abi-version=2 -fobjc-arc")
     endif()
