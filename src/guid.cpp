@@ -5,6 +5,7 @@
  */
 #include <cppguid/guid.h>
 #include <cctype>
+#include <string.h> // memcpy
 
 #ifdef __APPLE__
 #  include <CoreFoundation/CFUUID.h>
