@@ -227,9 +227,10 @@ namespace cppguid
 
     static JNIEnv* JniEnv()
     {
+        static JavaVM* javaVM;
         static thread_local JNIEnv* env = [] // init once for each thread
         {
-            Assert(javaVM, "JniEnv() used before JNI_OnLoad(). Avoid calling JNI methods in static initializers.");
+            assert(javaVM && "JniEnv() used before JNI_OnLoad(). Avoid calling JNI methods in static initializers.");
             JNIEnv* e = nullptr;
             if (javaVM->GetEnv((void**)&e, JNI_VERSION_1_6) != JNI_OK)
                 javaVM->AttachCurrentThread(&e, nullptr);
@@ -239,21 +240,81 @@ namespace cppguid
         return env;
     }
 
+    #define JniThrow(format, ...) do {             \
+        JNIEnv* env = JniEnv();                    \
+        if (env->ExceptionCheck()) {               \
+            env->ExceptionDescribe();              \
+            env->ExceptionClear();                 \
+        }                                          \
+        char msg[256];                             \
+        snprintf(msg, 256, format, ##__VA_ARGS__); \
+        throw std::runtime_error(msg);             \
+    } while (0)
+
+    template<class JObject> struct Ref
+    {
+        JObject obj;
+        Ref() : obj(nullptr) {}
+        explicit Ref(JObject obj) : obj(obj) {} // must be explicit, because it functions like unique_ptr
+        ~Ref() noexcept {
+            if (obj) JniEnv()->DeleteLocalRef(obj);
+        }
+        Ref(Ref&& r) noexcept : obj(r.obj) { r.obj = nullptr; }
+        Ref(const Ref& r) noexcept : obj(JniEnv()->NewLocalRef(r.obj)) {}
+        Ref& operator=(Ref&& r) noexcept { std::swap(obj, r.obj); return *this; }
+        Ref& operator=(const Ref& r) noexcept {
+            if (this != &r) { this->Ref(); new (this) Ref(r); } return *this;
+        }
+        operator JObject() const { return obj; } // implicit conversion of Ref<JObject> to JObject
+        explicit operator bool() const { return obj != nullptr; }
+    };
+
+    struct JniUUID
+    {
+        Ref<jclass> UUID = FindClass("java/util/UUID");
+        jmethodID randomUUID;
+        jmethodID getMostSignificantBits;
+        jmethodID getLeastSignificantBits;
+
+        JniUUID()
+        {
+            randomUUID = SMethod(UUID, "randomUUID", "()Ljava/util/UUID;");
+            getMostSignificantBits  = Method(UUID, "getMostSignificantBits",  "()J");
+            getLeastSignificantBits = Method(UUID, "getLeastSignificantBits", "()J");
+        }
+
+        void NewUuid(jlong& mostSignificant, jlong& leastSignificant)
+        {
+            Ref<jobject> javaUuid { JniEnv()->CallStaticObjectMethod(UUID, randomUUID) };
+            mostSignificant  = JniEnv()->CallLongMethod(javaUuid, getMostSignificantBits);
+            leastSignificant = JniEnv()->CallLongMethod(javaUuid, getLeastSignificantBits);
+        }
+
+        static Ref<jclass> FindClass(const char* className)
+        {
+            Ref<jclass> clazz { JniEnv()->FindClass(className) };
+            if (!clazz) JniThrow("Class not found: '%s'", className);
+            return clazz;
+        }
+        static jmethodID SMethod(jclass clazz, const char* methodName, const char* signature)
+        {
+            jmethodID method = JniEnv()->GetStaticMethodID(clazz, methodName, signature);
+            if (!method) JniThrow("Static method '%s' not found", methodName);
+            return method;
+        }
+        static jmethodID Method(jclass clazz, const char* methodName, const char* signature)
+        {
+            jmethodID method = JniEnv()->GetMethodID(clazz, methodName, signature);
+            if (!method) JniThrow("Method '%s' not found", methodName);
+            return method;
+        }
+    };
+
     Guid Guid::create()
     {
-        JNIEnv* env = JniEnv();
-
-
-        env->DeleteLocalRef(obj);
-
-        Class UUID { "java/util/UUID" }; // @note We can't store jclass statically
-        auto randomUUID              = UUID.SMethod("randomUUID", "()Ljava/util/UUID;");
-        auto getMostSignificantBits  = UUID.Method("getMostSignificantBits", "()J");
-        auto getLeastSignificantBits = UUID.Method("getLeastSignificantBits", "()J");
-
-        auto javaUuid = randomUUID.Object(nullptr);
-        jlong mostSignificant  = getMostSignificantBits.Long(javaUuid);
-        jlong leastSignificant = getLeastSignificantBits.Long(javaUuid);
+        jlong mostSignificant, leastSignificant;
+        JniUUID uuid;
+        uuid.NewUuid(mostSignificant, leastSignificant);
 
         unsigned char bytes[16] =
         {

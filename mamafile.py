@@ -12,7 +12,7 @@ class CppGuid(mama.BuildTarget):
 
     def package(self):
         self.export_include('include')
-        self.export_libs('lib', src_dir=True)
+        self.export_libs('lib')
         if self.linux:
             self.export_syslib('uuid')
 
