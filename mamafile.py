@@ -15,6 +15,8 @@ class CppGuid(mama.BuildTarget):
         self.export_libs()
         if self.linux:
             self.export_syslib('uuid')
+        if self.macos or self.ios:
+            self.export_syslib('-framework Foundation')
 
     def test(self, args):
         self.gdb(f'lib/CppGuidTests {args}', src_dir=True)
