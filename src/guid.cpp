@@ -230,12 +230,13 @@ namespace cppguid
         static JavaVM* javaVM;
         static thread_local JNIEnv* env = [] // init once for each thread
         {
-            assert(javaVM && "JniEnv() used before JNI_OnLoad(). Avoid calling JNI methods in static initializers.");
+            /*assert(javaVM && "JniEnv() used before JNI_OnLoad(). Avoid calling JNI methods in static initializers.");
             JNIEnv* e = nullptr;
             if (javaVM->GetEnv((void**)&e, JNI_VERSION_1_6) != JNI_OK)
                 javaVM->AttachCurrentThread(&e, nullptr);
             assert(e && "javaVM->AttachCurrentThread() returned null JNIEnv*");
-            return e;
+            return e;*/
+            return nullptr;
         }();
         return env;
     }
